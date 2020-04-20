@@ -7,7 +7,15 @@ class CPU:
 
     def __init__(self):
         """Construct a new CPU."""
-        pass
+        self.ram = [0] * 256
+        self.reg = [0] * 8
+        self.pc = self.reg[0]
+        self.instruction_registry = 0 
+        self.instruction_registry = {
+            0b00000001: self.HLT_HANDLER,
+            0b10000010: self.LDI_HANDLER,
+            0b01000111: self.PRN_HANDLER,
+        }
 
     def load(self):
         """Load a program into memory."""
@@ -62,4 +70,28 @@ class CPU:
 
     def run(self):
         """Run the CPU."""
-        pass
+        while True:
+            op = self.ram[self.pc]
+            instruction = self.instruction_registry[op]
+            instruction()
+
+    def ram_read(self, address):
+        return self.ram[address]
+
+    def ram_write(self, address, value):
+        self.ram[address] = value
+
+    def HLT_HANDLER(self):
+        sys.exit(0)
+
+    def LDI_HANDLER(self):
+        address = self.ram_read(self.pc + 1)
+        value = self.ram_read(self.pc + 2)
+        self.reg[address] = value
+        self.pc += 3
+
+    def PRN_HANDLER(self):
+        address = self.ram_read(self.pc + 1)
+        print(self.reg[address])
+        self.pc += 2
+
