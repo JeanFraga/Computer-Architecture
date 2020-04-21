@@ -51,7 +51,7 @@ class CPU:
             
         except:
             print("invalid program name")
-            self.HLT_HANDLER()
+            self.HLT()
 
 
     def alu(self, op, reg_a, reg_b):
