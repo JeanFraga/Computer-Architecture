@@ -10,33 +10,48 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = self.reg[0]
-        self.instruction_registry = 0 
+        # self.instruction_registry = 0 
         self.instruction_registry = {
-            0b00000001: self.HLT_HANDLER,
-            0b10000010: self.LDI_HANDLER,
-            0b01000111: self.PRN_HANDLER,
+            0b00000001: self.HLT,
+            0b10000010: self.LDI,
+            0b01000111: self.PRN,
+            0b10100010: self.MUL,
         }
 
-    def load(self):
+    def load(self, program):
         """Load a program into memory."""
 
         address = 0
 
         # For now, we've just hardcoded a program:
 
-        program = [
-            # From print8.ls8
-            0b10000010, # LDI R0,8
-            0b00000000,
-            0b00001000,
-            0b01000111, # PRN R0
-            0b00000000,
-            0b00000001, # HLT
-        ]
-
-        for instruction in program:
-            self.ram[address] = instruction
-            address += 1
+        # program = [
+        #     # From print8.ls8
+        #     0b10000010, # LDI R0,8
+        #     0b00000000,
+        #     0b00001000,
+        #     0b01000111, # PRN R0
+        #     0b00000000,
+        #     0b00000001, # HLT
+        # ]
+        # for instruction in program:
+        #     self.ram[address] = instruction
+        #     address += 1
+        try:
+            program += '.ls8'
+            # print(program)
+            with open('Computer-Architecture/ls8/examples/'+program) as f:
+                for line in f:
+                    line = line.split('#')
+                    line = line[0].strip()
+                    if line == '':
+                        continue
+                    self.ram[address] = int(line, 2)
+                    address += 1
+            
+        except:
+            print("invalid program name")
+            self.HLT_HANDLER()
 
 
     def alu(self, op, reg_a, reg_b):
@@ -81,17 +96,29 @@ class CPU:
     def ram_write(self, address, value):
         self.ram[address] = value
 
-    def HLT_HANDLER(self):
+    def HLT(self):
         sys.exit(0)
 
-    def LDI_HANDLER(self):
+    def LDI(self):
         address = self.ram_read(self.pc + 1)
         value = self.ram_read(self.pc + 2)
         self.reg[address] = value
         self.pc += 3
 
-    def PRN_HANDLER(self):
+    def PRN(self):
         address = self.ram_read(self.pc + 1)
         print(self.reg[address])
         self.pc += 2
+
+    def MUL(self):
+        address1 = self.ram_read(self.pc + 1)
+        address2 = self.ram_read(self.pc + 2)
+        # value1 = self.ram_read(self.pc - 6)
+        # value2 = self.ram_read(self.pc - 3)
+        # print(self.reg[address1])
+        result = self.reg[address1] * self.reg[address2]
+        # result = value1 * value2
+        self.reg[address1] = result
+        # print(self.reg[address1],self.reg[address2],result)
+        self.pc += 3
 

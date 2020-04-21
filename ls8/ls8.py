@@ -6,6 +6,8 @@ import sys
 from cpu import *
 
 cpu = CPU()
-
-cpu.load()
-cpu.run()
+program = input()
+while program != 'q':
+    cpu.load(program)
+    cpu.run()
+    program = input()
