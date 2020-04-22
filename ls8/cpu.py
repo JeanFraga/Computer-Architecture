@@ -10,12 +10,15 @@ class CPU:
         self.ram = [0] * 256
         self.reg = [0] * 8
         self.pc = self.reg[0]
+        self.stack_pointer = -1
         # self.instruction_registry = 0 
         self.instruction_registry = {
             0b00000001: self.HLT,
             0b10000010: self.LDI,
             0b01000111: self.PRN,
             0b10100010: self.MUL,
+            0b01000101: self.PUSH,
+            0b01000110: self.POP,
         }
 
     def load(self, program):
@@ -121,4 +124,21 @@ class CPU:
         self.reg[address1] = result
         # print(self.reg[address1],self.reg[address2],result)
         self.pc += 3
+    
+    def PUSH(self):
+        if self.stack_pointer == 0:
+            self.stack_pointer -=1
+        address = self.ram_read(self.pc + 1)
+        value = self.reg[address]
+        self.ram_write(self.stack_pointer, value)
+        self.stack_pointer -= 1
+        self.pc += 2
+
+    def POP(self):
+        if self.stack_pointer < 0:
+            self.stack_pointer += 1
+            address = self.ram_read(self.pc + 1)
+            value = self.ram_read(self.stack_pointer)
+            self.reg[address] = value
+            self.pc += 2
 
