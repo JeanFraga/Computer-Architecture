@@ -19,6 +19,9 @@ class CPU:
             0b10100010: self.MUL,
             0b01000101: self.PUSH,
             0b01000110: self.POP,
+            0b01010000: self.CALL,
+            0b00010001: self.RET,
+            0b10100000: self.ADD,
         }
 
     def load(self, program):
@@ -106,6 +109,7 @@ class CPU:
         address = self.ram_read(self.pc + 1)
         value = self.ram_read(self.pc + 2)
         self.reg[address] = value
+        # print('LDI',value)
         self.pc += 3
 
     def PRN(self):
@@ -124,21 +128,55 @@ class CPU:
         self.reg[address1] = result
         # print(self.reg[address1],self.reg[address2],result)
         self.pc += 3
+
+    def ADD(self):
+        address1 = self.ram_read(self.pc + 1)
+        address2 = self.ram_read(self.pc + 2)
+        result = self.reg[address1] + self.reg[address2]
+        self.reg[address1] = result
+        self.pc += 3
     
-    def PUSH(self):
+    def PUSH(self, address = None):
         if self.stack_pointer == 0:
             self.stack_pointer -=1
-        address = self.ram_read(self.pc + 1)
-        value = self.reg[address]
+        if address is None:
+            address = self.ram_read(self.pc + 1)
+            value = self.reg[address]
+            # print(address)
+        else:
+            value = address
+            # print(address)
         self.ram_write(self.stack_pointer, value)
         self.stack_pointer -= 1
         self.pc += 2
 
-    def POP(self):
-        if self.stack_pointer < 0:
-            self.stack_pointer += 1
-            address = self.ram_read(self.pc + 1)
-            value = self.ram_read(self.stack_pointer)
-            self.reg[address] = value
-            self.pc += 2
+    def POP(self, activate=True):
+        if activate is True:
+            if self.stack_pointer < 0:
+                self.stack_pointer += 1
+                address = self.ram_read(self.pc + 1)
+                value = self.ram_read(self.stack_pointer)
+                self.reg[address] = value
+                self.pc += 2
+        else:
+            if self.stack_pointer < 0:
+                self.stack_pointer += 1
+                value = self.ram_read(self.stack_pointer)
+                self.pc = value
+                # print(self.pc)
+
+    def CALL(self):
+        address = self.ram_read(self.pc+1)
+        # print('test1', self.pc)
+
+        return_address = self.pc + 2
+        # print('test2', self.pc)
+        self.PUSH(return_address)
+
+        # address = self.ram_read(self.pc + 1)
+        self.pc = self.reg[address]
+
+
+    def RET(self):
+        self.POP(False)
 
