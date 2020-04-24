@@ -11,8 +11,7 @@ class CPU:
         self.reg = [0] * 8
         self.pc = self.reg[0]
         self.stack_pointer = -1
-        self.flags = {}
-        # self.instruction_registry = 0 
+        # self.flags = {}
         self.instruction_registry = {
             0b00000001: self.HLT,
             0b10000010: self.LDI,
@@ -50,7 +49,6 @@ class CPU:
         #     address += 1
         try:
             program += '.ls8'
-            # print(program)
             with open('examples/'+program) as f:
                 for line in f:
                     line = line.split('#')
@@ -114,7 +112,6 @@ class CPU:
         address = self.ram_read(self.pc + 1)
         value = self.ram_read(self.pc + 2)
         self.reg[address] = value
-        # print('LDI',value)
         self.pc += 3
 
     def PRN(self):
@@ -210,4 +207,3 @@ class CPU:
             self.pc = value
         else:
             self.pc += 2
-
