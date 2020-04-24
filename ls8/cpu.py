@@ -11,6 +11,7 @@ class CPU:
         self.reg = [0] * 8
         self.pc = self.reg[0]
         self.stack_pointer = -1
+        self.flags = {}
         # self.instruction_registry = 0 
         self.instruction_registry = {
             0b00000001: self.HLT,
@@ -22,6 +23,10 @@ class CPU:
             0b01010000: self.CALL,
             0b00010001: self.RET,
             0b10100000: self.ADD,
+            0b10100111: self.CMP,
+            0b01010100: self.JMP,
+            0b01010101: self.JEQ,
+            0b01010110: self.JNE,
         }
 
     def load(self, program):
@@ -46,7 +51,7 @@ class CPU:
         try:
             program += '.ls8'
             # print(program)
-            with open('Computer-Architecture/ls8/examples/'+program) as f:
+            with open('examples/'+program) as f:
                 for line in f:
                     line = line.split('#')
                     line = line[0].strip()
@@ -120,13 +125,8 @@ class CPU:
     def MUL(self):
         address1 = self.ram_read(self.pc + 1)
         address2 = self.ram_read(self.pc + 2)
-        # value1 = self.ram_read(self.pc - 6)
-        # value2 = self.ram_read(self.pc - 3)
-        # print(self.reg[address1])
         result = self.reg[address1] * self.reg[address2]
-        # result = value1 * value2
         self.reg[address1] = result
-        # print(self.reg[address1],self.reg[address2],result)
         self.pc += 3
 
     def ADD(self):
@@ -142,10 +142,8 @@ class CPU:
         if address is None:
             address = self.ram_read(self.pc + 1)
             value = self.reg[address]
-            # print(address)
         else:
             value = address
-            # print(address)
         self.ram_write(self.stack_pointer, value)
         self.stack_pointer -= 1
         self.pc += 2
@@ -163,20 +161,53 @@ class CPU:
                 self.stack_pointer += 1
                 value = self.ram_read(self.stack_pointer)
                 self.pc = value
-                # print(self.pc)
 
     def CALL(self):
-        address = self.ram_read(self.pc+1)
-        # print('test1', self.pc)
-
+        address = self.ram_read(self.pc + 1)
         return_address = self.pc + 2
-        # print('test2', self.pc)
         self.PUSH(return_address)
-
-        # address = self.ram_read(self.pc + 1)
         self.pc = self.reg[address]
 
 
     def RET(self):
         self.POP(False)
+
+    def CMP(self):
+        address1 = self.ram_read(self.pc + 1)
+        address2 = self.ram_read(self.pc + 2)
+        value1 = self.reg[address1]
+        value2 = self.reg[address2]
+        self.flags = {
+            'E':0,
+            'L':0,
+            'G':0,
+        }
+        if value1 == value2:
+            self.flags['E'] = 1
+        elif value1 < value2:
+            self.flags['L'] = 1
+        elif value1 > value2:
+            self.flags['G'] = 1
+        self.pc += 3
+
+    def JMP(self):
+        address = self.ram_read(self.pc +1)
+        value = self.reg[address]
+        self.pc = value
+
+    def JEQ(self):
+        if self.flags['E'] == 1:
+            address = self.ram_read(self.pc + 1)
+            value = self.reg[address]
+            self.pc = value
+        else:
+            self.pc += 2
+
+    def JNE(self):
+        if self.flags['E'] == 0:
+            address = self.ram_read(self.pc + 1)
+            value = self.reg[address]
+            self.pc = value
+        else:
+            self.pc += 2
 
